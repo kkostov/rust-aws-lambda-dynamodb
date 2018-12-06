@@ -1,9 +1,15 @@
 extern crate lambda_runtime as lambda;
 extern crate serde_derive;
+extern crate rusoto_core;
+extern crate rusoto_dynamodb;
 
 use std::error::Error;
 use serde_derive::{Serialize, Deserialize};
 use lambda::{lambda, Context, error::HandlerError};
+
+use rusoto_core::Region;
+use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, AttributeValue};
+use std::collections::HashMap;
 
 fn main() -> Result<(), Box<dyn Error>> {
     lambda!(validation_handler);
@@ -71,8 +77,31 @@ fn validate_serial_alphanumeric(serial_number: &str) -> bool {
 }
 
 fn validate_serial_unique(serial_number: &str) -> bool {
-    let existing_serial_numbers = vec!["serial1", "serial2", "serial3"];
-    !existing_serial_numbers.contains(&serial_number)
+    let mut query_key: HashMap<String, AttributeValue> = HashMap::new();
+    query_key.insert(String::from("serial_number"), AttributeValue {
+        s: Some(serial_number.to_string()),
+        ..Default::default()
+    });
+
+    let query_serials = GetItemInput {
+        key: query_key,
+        table_name: String::from("assets"),
+        ..Default::default()
+    };
+
+    let client = DynamoDbClient::new(Region::EuCentral1);
+
+    match client.get_item(query_serials).sync() {
+        Ok(result) => {
+            match result.item {
+                Some(_) => false, // invalid, serial_number was found
+                None => true // valid, serial_number was not found
+            }
+        },
+        Err(error) => {
+            panic!("Error: {:?}", error);
+        },
+    }
 }
 
 #[cfg(test)]
