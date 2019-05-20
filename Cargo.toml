@@ -2,11 +2,11 @@
 name = "aws_validate_serial"
 version = "0.1.0"
 authors = ["Konstantin Kostov <konstantin@headbright.be>"]
-
+edition = "2018"
 
 [dependencies]
-serde = "1.0.80"
-serde_derive = "1.0.80"
+serde = "1.0.88"
+serde_derive = "1.0.88"
 lambda_runtime = "0.1.0"
-rusoto_core = {version = "0.35.0", default_features = false, features=["rustls"]}
-rusoto_dynamodb = {version = "0.35.0", default_features = false, features=["rustls"]}
+rusoto_core = {version = "0.36.0", default_features = false, features=["rustls"]}
+rusoto_dynamodb = {version = "0.36.0", default_features = false, features=["rustls"]}
